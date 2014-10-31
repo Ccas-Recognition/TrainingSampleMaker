@@ -140,7 +140,7 @@ namespace ImageTools
 			buffer2 = resizedImage.clone();
 			
 			DrawRectangles(1, buffer2);//crap
-			addWeighted(resizedImage, 0.75, buffer2, 0.25, 0.0, image);
+			addWeighted(resizedImage, 0.8, buffer2, 0.2, 0.0, image); //crap
 			DrawRectangles(0, image);//crap
 			DrawRectangles(2, image);//crap
 		}

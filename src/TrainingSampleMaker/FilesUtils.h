@@ -117,6 +117,12 @@ namespace FilesUtils
 		ss >> res;
 		return res;
 	}
+	std::string int2str(int val)
+	{
+		std::stringstream ss;
+		ss << val;
+		return ss.str();
+	}
 
 #ifdef WIN32
 	std::list<std::string> FilesInDir(const char* dir,const char* mask)

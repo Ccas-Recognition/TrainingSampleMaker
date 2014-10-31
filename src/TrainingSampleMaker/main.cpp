@@ -405,8 +405,6 @@ void SaveRectangles( string xml_filename, const vector< Rect_<int> > &rects )
 	FileStorage storage( xml_filename, FileStorage::WRITE );
 	savedFiles.push_back(xml_filename);
 
-	srand( unsigned int( time(0) ) );
-
 	storage << "images" << "[";
 	for(unsigned int i=0; i<rects.size(); ++i)
 	{
@@ -416,7 +414,7 @@ void SaveRectangles( string xml_filename, const vector< Rect_<int> > &rects )
 
 		stringstream filename;
 		
-		filename << gen_filename << "_" << "rnd" << (rand()%1000) << "_" << rect.x << "_" << rect.y << "_" << rect.width << "_" << rect.height << ".jpg";
+		filename << gen_filename << "_" << rect.x << "_" << rect.y << "_" << rect.width << "_" << rect.height << ".jpg";
 		Mat ImagePart = src( Range( rect.y, rect.y + rect.height ), Range( rect.x, rect.x + rect.width) );
 		imwrite(filename.str(), ImagePart);
 		savedFiles.push_back( filename.str() );
@@ -472,8 +470,11 @@ void SaveResult( string filename, string fg_dir, string bg_dir )
 	if(negative.size() == 0)
 		GenerateNegativeSamples();
 
-	SaveRectangles( fg_dir + filename + "_fg.xml", positive );
-	SaveRectangles( bg_dir + filename + "_bg.xml", negative );
+	srand( unsigned int( time(0) ) );
+	string rectanglesId = "rnd" + FilesUtils::int2str(rand()%1000);
+
+	SaveRectangles( fg_dir + filename + "_" + rectanglesId + "_fg.xml", positive );
+	SaveRectangles( bg_dir + filename + "_" + rectanglesId + "_bg.xml", negative );
 
 	cout << "saved: " << ( fg_dir + filename ) << ", " << ( bg_dir + filename ) << endl;
 }
@@ -508,14 +509,22 @@ void LoadRects(string filename, string dir, vector< Rect_<int> > &rects, const l
 void LoadCache(string filename, string bg_dir, string fg_dir)
 {
 	filename = FilesUtils::getFileName(filename);
-	list<string> fg_files, bg_files;
+	string xml_mask_bg = filename + "*_bg.xml";
+	list<string> fg_files, bg_files, bg_xml, fg_xml;
 
 #if WIN32
 	fg_files = FilesUtils::FilesInDir(fg_dir.c_str(), "*.jpg");
 	bg_files = FilesUtils::FilesInDir(bg_dir.c_str(), "*.jpg");
+	fg_xml = FilesUtils::FilesInDir(fg_dir.c_str(), xml_mask_fg.c_str());
+	bg_xml = FilesUtils::FilesInDir(bg_dir.c_str(), xml_mask_bg.c_str());
 #endif
 	LoadRects(filename, fg_dir, positive, fg_files);
 	LoadRects(filename, bg_dir, negative, bg_files);
+
+	for(auto it = fg_xml.begin(); it != fg_xml.end(); ++it)
+		savedFiles.push_back(fg_dir + (*it) );
+	for(auto it = bg_xml.begin(); it != bg_xml.end(); ++it)
+		savedFiles.push_back(bg_dir + (*it) );
 }		
 
 void GenerateHelpText()
