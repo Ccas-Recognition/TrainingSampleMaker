@@ -2,7 +2,6 @@
 #define IMAGE_NAVIGATOR_H
 
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <vector>
 
 namespace ImageTools
@@ -36,7 +35,7 @@ namespace ImageTools
 
 		vector< vector< Rect_<int> >* > drawRectangles;
 		vector< Scalar* > colors;
-
+		bool showBackgroundRects;
 	public:
 		Navigator(int _w, int _h, Mat _source )
 		{
@@ -169,10 +168,17 @@ namespace ImageTools
 			//buffer2 = Mat(image.rows, image.cols, image.type(), Scalar(0, 0, 0));
 			buffer2 = resizedImage.clone();
 			
-			DrawRectangles(1, buffer2);//crap
+			if(showBackgroundRects)
+			{
+				DrawRectangles(1, buffer2);//crap
+			}
 			addWeighted(resizedImage, 0.8, buffer2, 0.2, 0.0, image); //crap
 			DrawRectangles(0, image);//crap
 			DrawRectangles(2, image);//crap
+		}
+		void SetShowBackgroundRectangles(bool _showBackgroundRects)
+		{
+			showBackgroundRects = _showBackgroundRects;
 		}
 		private:
 		void DrawRectangles(int index, Mat &buffer)

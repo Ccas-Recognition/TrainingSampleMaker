@@ -49,6 +49,8 @@ vector< Rect_<int> > positive;
 vector< Rect_<int> > negative;
 vector< Rect_<int> > currentRectTarget;
 
+bool showBackgroundSamples;
+
 int imageWidth, imageHeight;
 bool removeAllFilesInDir;
 
@@ -70,6 +72,7 @@ void PrintUsage()
 		return -1;
 	}
 
+	showBackgroundSamples = true;
 	removeAllFilesInDir = false;
 	string filename, fg_dir, bg_dir;
 	filename = argv[1];
@@ -227,7 +230,7 @@ void PrintUsage()
 			navi->DrawVectorGraphics();
 			//imshow(window_name, navi->Get());
 		}
-		else if( c == 18 ) //ctrl+r
+		else if( c == 11 ) //ctrl+k
 		{
 			positive.clear();
 			negative.clear();
@@ -239,6 +242,11 @@ void PrintUsage()
 			drawHelp = !drawHelp;
 			navi->Update();
 			//imshow(window_name, navi->Get());
+		}
+		else if(c == 48) //0
+		{
+			showBackgroundSamples = !showBackgroundSamples;
+			navi->SetShowBackgroundRectangles(showBackgroundSamples  );
 		}
 		if(drawHelp)
 		{
@@ -537,7 +545,8 @@ void GenerateHelpText()
 	helpText.push_back( "ctrl+s -- save and generate training samples" );
 	helpText.push_back( "ctrl+f -- generate background negative samples" );
 	helpText.push_back( "ctrl+z -- remove last part" );
-	helpText.push_back( "ctrl+r -- remove all parts" );
+	helpText.push_back( "ctrl+k -- remove all parts" );
+	helpText.push_back( "0 -- show/hide background samples" );
 	helpText.push_back( "1, 2, 3, 4 -- change sample part size" );
 	helpText.push_back( "enter -- exit with saving" );
 	helpText.push_back( "exit -- exit without saving" );
