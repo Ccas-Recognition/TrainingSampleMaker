@@ -27,7 +27,7 @@ char window_name[] = "Training Sample Maker";
 
 int w, h;
 const int MOUSE_OFFSET_SIZE = 40;
-const int MOUSE_OFFSET_SPEED = 40;
+const int MOUSE_OFFSET_SPEED = 10;
 
 int cursor_pos_x;
 int cursor_pos_y;
@@ -185,25 +185,25 @@ void PrintUsage()
 
 		else if( c == 119) //w
 		{
-			navi->Translate(0, -MOUSE_OFFSET_SPEED);
+			navi->Translate(0, -MOUSE_OFFSET_SPEED*3/navi->GetScale() );
 			CallBackMouseFunc( EVENT_MOUSEMOVE, current_x, current_y, 0, 0 );
 			//imshow(window_name, navi->Get());	
 		}
 		else if( c == 97) //a
 		{
-			navi->Translate(-MOUSE_OFFSET_SPEED, 0 );
+			navi->Translate(-MOUSE_OFFSET_SPEED*3/navi->GetScale(), 0 );
 			CallBackMouseFunc( EVENT_MOUSEMOVE, current_x, current_y, 0, 0 );
 			//imshow(window_name, navi->Get());	
 		}
 		else if( c == 115) //s
 		{
-			navi->Translate(0, MOUSE_OFFSET_SPEED);
+			navi->Translate(0, MOUSE_OFFSET_SPEED*3/navi->GetScale());
 			CallBackMouseFunc( EVENT_MOUSEMOVE, current_x, current_y, 0, 0 );
 			//imshow(window_name, navi->Get());	
 		}
 		else if( c == 100) // d
 		{
-			navi->Translate(MOUSE_OFFSET_SPEED, 0);
+			navi->Translate(MOUSE_OFFSET_SPEED*3/navi->GetScale(), 0);
 			CallBackMouseFunc( EVENT_MOUSEMOVE, current_x, current_y, 0, 0 );
 			//imshow(window_name, navi->Get());	
 		}
@@ -303,16 +303,16 @@ void CallBackMouseFunc(int event, int x, int y, int flags, void* userdata)
 	else
 	{
 		if( x < MOUSE_OFFSET_SIZE )
-		dx = -MOUSE_OFFSET_SPEED;
+			dx = -MOUSE_OFFSET_SPEED/navi->GetScale();
 		else if( x > w - MOUSE_OFFSET_SIZE )
-		dx =  MOUSE_OFFSET_SPEED;
+			dx =  MOUSE_OFFSET_SPEED/navi->GetScale();
 		else
 			dx = 0;
 
 		if( y < MOUSE_OFFSET_SIZE )
-		dy = -MOUSE_OFFSET_SPEED;
+		dy = -MOUSE_OFFSET_SPEED/navi->GetScale();
 		else if( y > h - MOUSE_OFFSET_SIZE )
-			dy = MOUSE_OFFSET_SPEED;
+			dy = MOUSE_OFFSET_SPEED/navi->GetScale();
 		else
 			dy = 0;
 	}
@@ -509,6 +509,7 @@ void LoadRects(string filename, string dir, vector< Rect_<int> > &rects, const l
 void LoadCache(string filename, string bg_dir, string fg_dir)
 {
 	filename = FilesUtils::getFileName(filename);
+	string xml_mask_fg = filename + "*_fg.xml";
 	string xml_mask_bg = filename + "*_bg.xml";
 	list<string> fg_files, bg_files, bg_xml, fg_xml;
 

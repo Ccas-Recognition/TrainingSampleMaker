@@ -32,6 +32,7 @@ namespace ImageTools
 		Point2i dragCenterPosition;
 		Point2i centerPosition;
 		Point2f scale;
+		Point2f minScale;
 
 		vector< vector< Rect_<int> >* > drawRectangles;
 		vector< Scalar* > colors;
@@ -41,14 +42,22 @@ namespace ImageTools
 		{
 			BORDER_SIZE = _w/2;
 
-			//leftTopPosition.x = BORDER_SIZE;
-			//leftTopPosition.y = BORDER_SIZE;
-			
-			scale.x = 0.25f;
-			scale.y = 0.25f;
-
 			w = _w;
 			h = _h;
+
+			minScale.x = minScale.y = 0.25f;
+			scale.x = minScale.x;
+			scale.y = minScale.y;
+
+			while( min(-2*GetWindowSemiHeight() + BORDER_SIZE + _source.rows, -2*GetWindowSemiWidth() + BORDER_SIZE + _source.cols ) < 0.0f )
+			{
+				minScale.x *= 1.2f;
+				minScale.y *= 1.2f;
+
+				scale.x = minScale.x;
+				scale.y = minScale.y;
+			}
+
 			//source = Mat( source.rows + BORDER_SIZE*2, source.cols + BORDER_SIZE*2, source.type(), 0 );
 			//_source.copyTo( source( Range( BORDER_SIZE, BORDER_SIZE + _source.rows - 1 ), Range( BORDER_SIZE, BORDER_SIZE + _source.cols - 1 ) ) );
 			copyMakeBorder( _source, source, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_CONSTANT, 0 );
@@ -62,6 +71,11 @@ namespace ImageTools
 			image = Mat( h, w, source.type() );
 			resizedImage = Mat( h, w, source.type() );
 			Update();
+		}
+
+		float GetScale()
+		{
+			return scale.x;
 		}
 
 		void SetRectangles( vector< Rect_<int> > &_rectangles, Scalar &color )
@@ -101,8 +115,8 @@ namespace ImageTools
 			//float center_x = leftTopPosition.x + w/2*scale.x;
 			//float center_y = leftTopPosition.y + h/2*scale.y;
 
-			scale.x = clamp(scale.x*dx, 0.25f, 10.0f);
-			scale.y = clamp(scale.y*dy, 0.25f, 10.0f);
+			scale.x = clamp(scale.x*dx, minScale.x, 10.0f);
+			scale.y = clamp(scale.y*dy, minScale.y, 10.0f);
 
 			//float current_center_x = leftTopPosition.x + w/2*scale.x;
 			//float current_center_y = leftTopPosition.y + h/2*scale.y;
@@ -112,23 +126,39 @@ namespace ImageTools
 
 			Update();
 		}
+
+		float GetWindowSemiWidth()
+		{
+			return w/2*1.0f/scale.x;
+		}
+
+		float GetWindowSemiHeight()
+		{
+			return h/2*1.0f/scale.y;
+		}
+
 		void Update()
 		{
-			centerPosition.x = clamp( centerPosition.x, int(w/2*1.0f/scale.x), fullResolutionWidth - int(w/2*1.0f/scale.x) );
-			centerPosition.y = clamp( centerPosition.y, int(h/2*1.0f/scale.y), fullResolutionHeight - int(h/2*1.0f/scale.y) );
+			int windowSemiWidth = int( GetWindowSemiWidth() );
+			int windowSemiHeight = int( GetWindowSemiHeight() );
+			centerPosition.x = clamp( centerPosition.x, windowSemiWidth, fullResolutionWidth - windowSemiWidth );
+			centerPosition.y = clamp( centerPosition.y, windowSemiHeight, fullResolutionHeight - windowSemiHeight );
 
-			source( Range(centerPosition.y - int(h/2*1.0f/scale.y), centerPosition.y + int(h/2*1.0f/scale.y)), 
-				Range(centerPosition.x - int(w/2*1.0f/scale.y), centerPosition.x + int(w/2*1.0f/scale.y) ) ).copyTo(buffer1);
+			source( Range(centerPosition.y - windowSemiHeight, centerPosition.y + windowSemiHeight), 
+				Range(centerPosition.x - windowSemiWidth, centerPosition.x + windowSemiWidth ) ).copyTo(buffer1);
 			resize( buffer1, resizedImage, resizedImage.size(), scale.x, scale.y, INTER_NEAREST );
 
 			DrawVectorGraphics();
 		}
 		void LocalToGlobal( Rect_<int> &rect )
 		{
+			int windowSemiWidth = int( GetWindowSemiWidth() );
+			int windowSemiHeight = int( GetWindowSemiHeight() );
+
 			rect.x = int( ( rect.x )/scale.x );
 			rect.y = int( ( rect.y )/scale.y );
-			rect.x += ( centerPosition.x - int(w/2*1.0f/scale.x) ) - BORDER_SIZE;
-			rect.y += ( centerPosition.y - int(h/2*1.0f/scale.y) ) - BORDER_SIZE;
+			rect.x += ( centerPosition.x - windowSemiWidth ) - BORDER_SIZE;
+			rect.y += ( centerPosition.y - windowSemiHeight ) - BORDER_SIZE;
 			rect.x -= rect.width/2;
 			rect.y -= rect.height/2;
 		}
@@ -147,13 +177,16 @@ namespace ImageTools
 		private:
 		void DrawRectangles(int index, Mat &buffer)
 		{
+			int windowSemiWidth = int( GetWindowSemiWidth() );
+			int windowSemiHeight = int( GetWindowSemiHeight() );
+
 			int thickness =  min( max( int(scale.x), 1), 3);
 			vector< Rect_<int> > &rects = *(drawRectangles[index]);
 			for(unsigned int j=0; j<rects.size(); ++j )
 			{
 				Rect_<int> rect = rects[j];
-				rect.x += BORDER_SIZE - ( centerPosition.x - int(w/2*1.0f/scale.x) );
-				rect.y += BORDER_SIZE - ( centerPosition.y - int(h/2*1.0f/scale.y) );
+				rect.x += BORDER_SIZE - ( centerPosition.x - windowSemiWidth );
+				rect.y += BORDER_SIZE - ( centerPosition.y - windowSemiHeight );
 				rect.x = int( rect.x*scale.x );
 				rect.y = int( rect.y*scale.y );
 				rect.width = int(rect.width*scale.x);
